@@ -3,6 +3,15 @@ import express, {
 } from 'express';
 import 'dotenv/config';
 import helmet from 'helmet';
+import mysqlDataSrc from './database/mysql.config.js';
+
+(async () => {
+  await mysqlDataSrc.initialize().then(() => {
+    console.log('Database connection initialized!');
+  }).catch((error) => {
+    console.error(error);
+  });
+})();
 
 const app: Express = express();
 app.use(helmet());
