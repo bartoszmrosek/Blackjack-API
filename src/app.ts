@@ -1,14 +1,15 @@
-import express, { Express, Request, Response } from 'express';
-import "dotenv/config"
-import jwtCheck from './middlewares/oauth2.middleware.js';
+import express, {
+  Express, Request, Response, json,
+} from 'express';
+import 'dotenv/config';
 import helmet from 'helmet';
 
 const app: Express = express();
-app.use(helmet())
+app.use(helmet());
+app.use(json());
 
-
-app.get('/',jwtCheck, (req: Request, res: Response) => {
+app.get('/', async (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');
 });
 
-export {app};
+export default app;
