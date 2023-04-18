@@ -1,24 +1,21 @@
 import express, {
-  Express, Request, Response, json,
+  Express, json,
 } from 'express';
 import 'dotenv/config';
 import helmet from 'helmet';
+import router from './routes/index.js';
 import mysqlDataSrc from './database/mysql.config.js';
 
-(async () => {
-  await mysqlDataSrc.initialize().then(() => {
-    console.log('Database connection initialized!');
-  }).catch((error) => {
-    console.error(error);
-  });
-})();
+await mysqlDataSrc.initialize().then(() => {
+  console.log('database connection estabilished');
+}).catch((error) => {
+  console.error(error);
+});
 
 const app: Express = express();
 app.use(helmet());
 app.use(json());
 
-app.get('/', async (req: Request, res: Response) => {
-  res.send('Express + TypeScript Server');
-});
+app.use('/api', router);
 
 export default app;
