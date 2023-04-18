@@ -3,6 +3,11 @@ import express, {
 } from 'express';
 import 'dotenv/config';
 import helmet from 'helmet';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import cookieParser from 'cookie-parser';
+import { ClientToServerEvents, ServerToClienEvents } from 'interfaces/Socket.interface.js';
+import auth from './middlewares/auth.middleware.js';
 import router from './routes/index.js';
 import mysqlDataSrc from './database/mysql.config.js';
 
@@ -18,4 +23,10 @@ app.use(json());
 
 app.use('/api', router);
 
-export default app;
+const httpServer = createServer(app);
+const io = new Server<ClientToServerEvents, ServerToClienEvents>(httpServer);
+io.engine.use(cookieParser());
+io.engine.use(helmet());
+io.use(auth);
+
+export default httpServer;

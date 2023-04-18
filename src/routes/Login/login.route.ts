@@ -15,7 +15,7 @@ loginRouter.post('/', async (req: Request, res: Response) => {
     if (!user) return res.sendStatus(404);
     const doPasswordMatch = await bcrypt.compare(password, user.password);
     if (!doPasswordMatch) return res.sendStatus(401);
-    return jwt.sign({ data: password }, process.env.SECRET_KEY, { expiresIn: '24h' }, (error, token) => {
+    return jwt.sign({ username }, process.env.SECRET_KEY, { expiresIn: '24h' }, (error, token) => {
       if (error) return res.sendStatus(500);
       res.cookie('token', token, {
         sameSite: 'none', httpOnly: true, secure: true, expires: new Date(Date.now() + 3600000 * 24),
