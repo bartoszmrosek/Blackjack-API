@@ -1,17 +1,13 @@
 import { NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
-import { Socket } from 'socket.io';
 import { parse } from 'cookie';
 import mysqlDataSrc from '../database/mysql.config.js';
 import User from '../entity/user.entity.js';
-
-export interface SocketWithUser extends Socket {
-  user: User;
-}
+import { TypedSocketWithUser } from '../interfaces/Socket.interface';
 
 const auth = async (
-  socket: SocketWithUser,
+  socket: TypedSocketWithUser,
   next: NextFunction,
 ) => {
   if (!socket.handshake.headers.cookie) {

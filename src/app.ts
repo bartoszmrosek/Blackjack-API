@@ -6,7 +6,7 @@ import helmet from 'helmet';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cookieParser from 'cookie-parser';
-import { ClientToServerEvents, ServerToClienEvents } from 'interfaces/Socket.interface.js';
+import { ClientToServerEvents, ServerToClienEvents, TypedSocketWithUser } from 'interfaces/Socket.interface.js';
 import { v4 as uuidv4 } from 'uuid';
 import auth from './middlewares/auth.middleware.js';
 import router from './routes/index.js';
@@ -39,13 +39,13 @@ export function removeEmptyTable(tableId: string) {
   }
 }
 
-io.on('connection', (socket) => {
+io.on('connection', (socket: TypedSocketWithUser) => {
   const freeSeatIndex = allGameTables.findIndex((table) => table.getNumOfPlayers() < 5);
   if (freeSeatIndex !== -1) {
-    allGameTables[freeSeatIndex].userJoin(socket);
+    allGameTables[freeSeatIndex].userJoinRoom(socket);
   } else {
     const newTable = new Table(uuidv4());
-    newTable.userJoin(socket);
+    newTable.userJoinRoom(socket);
     allGameTables.push(newTable);
   }
 });

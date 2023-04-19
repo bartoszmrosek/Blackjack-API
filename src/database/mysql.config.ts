@@ -5,7 +5,7 @@ import User from '../entity/user.entity.js';
 const mysqlDataSrc = new DataSource({
   type: 'mysql',
   poolSize: 5,
-  logging: true,
+  logging: false,
   synchronize: true,
   username: process.env.USER,
   password: process.env.PASSWORD,
