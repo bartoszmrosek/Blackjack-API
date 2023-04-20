@@ -1,6 +1,6 @@
 import { TypedSocketWithUser } from './Socket.interface';
 
-export type PlayerStatus = 'playing' | 'bust' | 'won' | 'lost' | 'blackjack'
+export type PlayerStatus = 'playing' | 'bust' | 'won' | 'lost' | 'blackjack' | 'push'
 export type PlayerDecision = 'hit' | 'stand' | 'doubleDown'
 
 export interface Player {

@@ -9,7 +9,7 @@ isSender extends true ? [Error, ...args] : args;
 type SocketSafeActivePlayer = Omit<ActivePlayer, 'user' | 'reservedBalance'>;
 type SocketSafePendingPlayer = Omit<Player, 'user' | 'reservedBalance'>;
 
-type GameStatusType = {
+type GameStatusObject = {
     isGameStarted: boolean,
     timer: number,
     activePlayers: SocketSafeActivePlayer[],
@@ -34,13 +34,34 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
           pendingPlayers,
           presenterState,
           currentlyAsking,
-        }: GameStatusType
-        )=>void,
-    askingStatusUpdate: (currentlyAsking: GameStatusType['currentlyAsking'])=>void;
-    userMadeDecision: (currentlyAsking: GameStatusType['currentlyAsking'], decision: PlayerDecision, card?: string)=>void
+        }: GameStatusObject
+    )=>void,
+    askingStatusUpdate: (currentlyAsking: GameStatusObject['currentlyAsking'])=>void;
+    userMadeDecision: (currentlyAsking: GameStatusObject['currentlyAsking'], decision: PlayerDecision, card?: string)=>void
     getPlayerDecision: (seatId: number,
          callback: (...args: WithTimeoutAck<isSender, [PlayerDecision]>)=>void
-        )=>void;
+    )=>void;
+    presenterTime: (
+        {
+          isGameStarted,
+          timer,
+          activePlayers,
+          pendingPlayers,
+          presenterState,
+          currentlyAsking,
+        }: GameStatusObject
+    )=>void,
+    newPresenterCard: (card: string)=>void;
+    gameEnded: (
+        {
+          isGameStarted,
+          timer,
+          activePlayers,
+          pendingPlayers,
+          presenterState,
+          currentlyAsking,
+        }: GameStatusObject
+    )=>void
 }
 
 export interface ClientToServerEvents{

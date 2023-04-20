@@ -71,7 +71,7 @@ export default class Table extends TableLogic {
          && pendingPlayer.user.user.balance - bet >= 0
       ) {
         // eslint-disable-next-line no-param-reassign
-        pendingPlayer.user.user.balance -= pendingPlayer.bet;
+        user.user.balance -= bet;
         this.users.forEach((remainingUser) => {
           if (remainingUser.user.id !== user.user.id) {
             remainingUser.emit('betPlaced', bet, seatId);

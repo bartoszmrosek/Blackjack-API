@@ -22,11 +22,10 @@ export default class TableLogic {
 
   private startingTimeout: NodeJS.Timeout;
 
-  private afterGameCallbacks: [(...args: unknown[])=>void, unknown[]][] = [];
-
-  private presenterState: {cards: string[], score: number[]} = {
+  private presenterState: {cards: string[], score: number[], didGetBlackjack: boolean} = {
     cards: [],
     score: [0],
+    didGetBlackjack: false,
   };
 
   private currentlyAsked: ({userId: number, seatId: number} | null) = null;
@@ -65,9 +64,43 @@ export default class TableLogic {
   }
 
   private endGame() {
+    this.timeoutTime = 15 * 1000;
+    this.activePlayers = this.activePlayers.map((activePlayer) => ({
+      ...activePlayer,
+
+    }));
     this.users.forEach((user) => {
-      user.emit('gameStatusUpdate', this.getGameStatusObject());
+      user.emit('gameEnded', this.getGameStatusObject());
     });
+  }
+
+  private presenterTime() {
+    this.users.forEach((user) => {
+      user.emit('presenterTime', this.getGameStatusObject());
+    });
+    const drawNewCard = (iteration: number) => {
+      if (Math.min(...this.presenterState.score) < 17) {
+        const newPresenterCard = this.getNewCard();
+        const newPresenterScore = getAllPermutations(
+          this.presenterState.score,
+          getCardValues(newPresenterCard),
+        );
+        this.presenterState.cards.push(newPresenterCard);
+        this.presenterState.score = newPresenterScore;
+        if (iteration === 0) {
+          this.presenterState.didGetBlackjack = Math.max(...newPresenterScore) === 21;
+        }
+        setTimeout(() => {
+          this.users.forEach((user) => {
+            user.emit('newPresenterCard', newPresenterCard);
+          });
+          drawNewCard(iteration + 1);
+        }, 2000);
+      } else {
+        this.endGame();
+      }
+    };
+    drawNewCard(0);
   }
 
   private askActivePlayer() {
@@ -120,6 +153,7 @@ export default class TableLogic {
             playerToAsk.cards.push(newCard);
             playerToAsk.cardsScore = newScore;
             playerToAsk.status = didBust ? 'bust' : 'playing';
+            playerToAsk.bet *= 2;
             playerToAsk.hasMadeFinalDecision = true;
             this.users.forEach((user) => {
               user.emit('userMadeDecision', this.currentlyAsked, decision, newCard);
@@ -136,7 +170,8 @@ export default class TableLogic {
         this.askActivePlayer();
       }
     } else {
-      this.endGame();
+      this.currentlyAsked = null;
+      this.presenterTime();
     }
   }
 
@@ -145,6 +180,7 @@ export default class TableLogic {
     this.presenterState = {
       cards: [newPresenterCard],
       score: getCardValues(newPresenterCard),
+      didGetBlackjack: false,
     };
     this.activePlayers = this.activePlayers.map((player) => {
       const firstNewCard = this.getNewCard();
@@ -218,12 +254,11 @@ export default class TableLogic {
     this.presenterState = {
       cards: [],
       score: [0],
+      didGetBlackjack: false,
     };
+    this.activePlayers = [];
     this.users.forEach((user) => {
       user.emit('gameStatusUpdate', this.getGameStatusObject());
-    });
-    this.afterGameCallbacks.forEach((cb) => {
-      cb[0](cb[1]);
     });
   }
 }
