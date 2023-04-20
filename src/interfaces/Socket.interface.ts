@@ -1,14 +1,24 @@
 import { Socket } from 'socket.io';
 import User from '../entity/user.entity';
-import { ActivePlayer, Player } from './Player.interface';
+import { ActivePlayer, Player, PlayerDecision } from './Player.interface';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type WithTimeoutAck<isSender extends boolean, args extends any[]> =
 isSender extends true ? [Error, ...args] : args;
 
 type SocketSafeActivePlayer = Omit<ActivePlayer, 'user' | 'reservedBalance'>;
 type SocketSafePendingPlayer = Omit<Player, 'user' | 'reservedBalance'>;
 
-export interface ServerToClienEvents{
+type GameStatusType = {
+    isGameStarted: boolean,
+    timer: number,
+    activePlayers: SocketSafeActivePlayer[],
+    pendingPlayers: SocketSafePendingPlayer[],
+    presenterState: {cards: string[], score: number[]},
+    currentlyAsking: {userId: number, seatId: number} | null,
+}
+
+export interface ServerToClienEvents<isSender extends boolean = false>{
     gameTimerStarting: (timerTime: number)=>void;
     userJoinedSeat: ({ username, userId, seatId }:
         {username: string, userId: number, seatId: number}
@@ -16,14 +26,21 @@ export interface ServerToClienEvents{
     userLeftSeat: ({ userId, seatId }: {userId: number, seatId: number})=>void;
     userLeftGame: (userId: number)=>void;
     betPlaced: (bet: number, seatId: number)=>void;
-    gameStarting: (
-        activePlayers: SocketSafeActivePlayer[],
-        pendingPlayers: SocketSafePendingPlayer[]
-        )=>void;
     gameStatusUpdate: (
-        timer: number,
-        activePlayers: SocketSafeActivePlayer[],
-        pendingPlayers: SocketSafePendingPlayer[])=>void
+        {
+          isGameStarted,
+          timer,
+          activePlayers,
+          pendingPlayers,
+          presenterState,
+          currentlyAsking,
+        }: GameStatusType
+        )=>void,
+    askingStatusUpdate: (currentlyAsking: GameStatusType['currentlyAsking'])=>void;
+    userMadeDecision: (currentlyAsking: GameStatusType['currentlyAsking'], decision: PlayerDecision, card?: string)=>void
+    getPlayerDecision: (seatId: number,
+         callback: (...args: WithTimeoutAck<isSender, [PlayerDecision]>)=>void
+        )=>void;
 }
 
 export interface ClientToServerEvents{
