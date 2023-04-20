@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io';
 import User from '../entity/user.entity';
 import { ActivePlayer, Player, PlayerDecision } from './Player.interface';
+import { GameState } from './Table.interfaces';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type WithTimeoutAck<isSender extends boolean, args extends any[]> =
@@ -10,8 +11,7 @@ type SocketSafeActivePlayer = Omit<ActivePlayer, 'socket' | 'reservedBalance'>;
 type SocketSafePendingPlayer = Omit<Player, 'socket' | 'reservedBalance'>;
 
 type GameStatusObject = {
-    isGameStarted: boolean,
-    isGameEnded: boolean,
+    gameState: GameState,
     timer: number,
     activePlayers: SocketSafeActivePlayer[],
     pendingPlayers: SocketSafePendingPlayer[],
@@ -29,8 +29,7 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
     betPlaced: (bet: number, seatId: number)=>void;
     gameStatusUpdate: (
         {
-          isGameStarted,
-          isGameEnded,
+          gameState,
           timer,
           activePlayers,
           pendingPlayers,
@@ -45,8 +44,7 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
     )=>void;
     presenterTime: (
         {
-          isGameStarted,
-          isGameEnded,
+          gameState,
           timer,
           activePlayers,
           pendingPlayers,
@@ -57,8 +55,7 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
     newPresenterCard: (card: string)=>void;
     gameEnded: (
         {
-          isGameStarted,
-          isGameEnded,
+          gameState,
           timer,
           activePlayers,
           pendingPlayers,

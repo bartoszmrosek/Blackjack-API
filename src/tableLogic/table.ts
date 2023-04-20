@@ -34,7 +34,9 @@ export default class Table extends TableLogic {
     this.pendingPlayers.push({
       socket, seatId, bet: 0,
     });
-    if (this.pendingPlayers.length === 1 && !this.isGameStarting && !this.isGameStarted) {
+    if (this.pendingPlayers.length === 1
+      && !this.gameState.isGameStarting
+      && !this.gameState.isGameStarted) {
       this.timerStarting();
     }
     this.sockets.forEach((currentUser) => {
@@ -103,7 +105,7 @@ export default class Table extends TableLogic {
     this.pendingPlayers = this.pendingPlayers.filter(
       (pendingPlayer) => pendingPlayer.socket.id !== socket.id,
     );
-    if (this.sockets.length === 0 && !this.isGameStarted) {
+    if (this.sockets.length === 0 && !this.gameState.isGameStarted) {
       setInterval(() => {
         if (this.sockets.length === 0) {
           removeEmptyTable(this.tableId);
