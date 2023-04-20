@@ -1,17 +1,15 @@
-import express, {
-  Express, json,
-} from 'express';
+import express, { json } from 'express';
 import 'dotenv/config';
 import helmet from 'helmet';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cookieParser from 'cookie-parser';
 import { ClientToServerEvents, ServerToClienEvents, TypedSocketWithUser } from 'interfaces/Socket.interface.js';
-import { v4 as uuidv4 } from 'uuid';
-import auth from './middlewares/auth.middleware.js';
+import cors from 'cors';
+import { socketAuth } from './middlewares/auth.middleware.js';
 import router from './routes/index.js';
 import mysqlDataSrc from './database/mysql.config.js';
-import Table from './TableLogic/Table.js';
+import allGameTables from './tableStore.js';
 
 await mysqlDataSrc.initialize().then(() => {
   console.log('database connection estabilished');
@@ -19,35 +17,40 @@ await mysqlDataSrc.initialize().then(() => {
   console.error(error);
 });
 
-const app: Express = express();
+const CORS_OPTIONS: cors.CorsOptions = {
+  credentials: true,
+  origin: process.env.NODE_ENV === 'production' ? 'https://bartoszmrosek.github.io/Blackjack-Game' : 'https://localhost:5173/Blackjack-Game',
+};
+
+const app = express();
 app.use(helmet());
 app.use(json());
+app.use(cookieParser());
+app.use(cors(CORS_OPTIONS));
 
 app.use('/api', router);
 
 const httpServer = createServer(app);
-const io = new Server<ClientToServerEvents, ServerToClienEvents>(httpServer);
+const io = new Server<ClientToServerEvents, ServerToClienEvents>(
+  httpServer,
+  { cors: CORS_OPTIONS },
+);
 io.engine.use(cookieParser());
 io.engine.use(helmet());
-io.use(auth);
-
-const allGameTables: Table[] = [];
-export function removeEmptyTable(tableId: string) {
-  const removedTableIndex = allGameTables.findIndex((table) => table.getTableId() === tableId);
-  if (removedTableIndex > -1) {
-    allGameTables.splice(removedTableIndex, 1);
-  }
-}
+io.use(socketAuth);
 
 io.on('connection', (socket: TypedSocketWithUser) => {
-  const freeSeatIndex = allGameTables.findIndex((table) => table.getNumOfPlayers() < 5);
-  if (freeSeatIndex !== -1) {
-    allGameTables[freeSeatIndex].userJoinRoom(socket);
-  } else {
-    const newTable = new Table(uuidv4());
-    newTable.userJoinRoom(socket);
-    allGameTables.push(newTable);
-  }
+  socket.on('joinGameTable', (roomId, callback) => {
+    const foundGameTable = allGameTables.find((gameTable) => gameTable.getTableId() === roomId);
+    if (!foundGameTable) {
+      return callback(404);
+    }
+    if (foundGameTable.getNumOfPlayers() > 4) {
+      return callback(409);
+    }
+    foundGameTable.userJoinRoom(socket);
+    return callback(200);
+  });
 });
 
 export default httpServer;

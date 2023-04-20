@@ -5,7 +5,7 @@ import getCardValues from '../utils/getCardValues.js';
 import getRandomInt from '../utils/getRandomInt.js';
 import deck from '../cardDeck.json' assert {type: 'json'};
 import checkCardRules from '../utils/checkGameRules.js';
-import { removeEmptyTable } from '../app.js';
+import { removeEmptyTable } from '../tableStore.js';
 import mysqlDataSrc from '../database/mysql.config.js';
 import User from '../entity/user.entity.js';
 

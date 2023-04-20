@@ -1,5 +1,5 @@
 import { TypedSocketWithUser } from 'interfaces/Socket.interface';
-import { removeEmptyTable } from '../app.js';
+import { removeEmptyTable } from '../tableStore.js';
 import TableLogic from './TableLogic.js';
 
 export default class Table extends TableLogic {
@@ -9,6 +9,14 @@ export default class Table extends TableLogic {
 
   public getNumOfPlayers() {
     return this.sockets.length;
+  }
+
+  public initialize() {
+    setTimeout(() => {
+      if (this.sockets.length === 0) {
+        removeEmptyTable(this.tableId);
+      }
+    }, 5000);
   }
 
   private handleJoinTableSeat(
@@ -60,6 +68,7 @@ export default class Table extends TableLogic {
     seatId:number,
     callback: (ack: number)=> void,
   ) {
+    if (bet <= 0) return callback(400);
     let isBetPlaced = false;
     this.pendingPlayers = this.pendingPlayers.map((pendingPlayer) => {
       if (
@@ -80,10 +89,9 @@ export default class Table extends TableLogic {
       return pendingPlayer;
     });
     if (isBetPlaced) {
-      callback(200);
-    } else {
-      callback(406);
+      return callback(200);
     }
+    return callback(406);
   }
 
   private handleDisconnect(socket: TypedSocketWithUser) {
@@ -100,7 +108,7 @@ export default class Table extends TableLogic {
         if (this.sockets.length === 0) {
           removeEmptyTable(this.tableId);
         }
-      }, 5000);
+      }, 10000);
     }
   }
 

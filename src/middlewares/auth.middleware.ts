@@ -1,4 +1,4 @@
-import { NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import { parse } from 'cookie';
@@ -6,7 +6,7 @@ import mysqlDataSrc from '../database/mysql.config.js';
 import User from '../entity/user.entity.js';
 import { TypedSocketWithUser } from '../interfaces/Socket.interface';
 
-const auth = async (
+const socketAuth = async (
   socket: TypedSocketWithUser,
   next: NextFunction,
 ) => {
@@ -32,4 +32,15 @@ const auth = async (
   }
 };
 
-export default auth;
+const apiAuth = (req: Request, res: Response, next: NextFunction) => {
+  const { token } = req.cookies;
+  if (!token) return res.sendStatus(401);
+  try {
+    jwt.verify(token, process.env.SECRET_KEY);
+    return next();
+  } catch (error) {
+    return res.sendStatus(400);
+  }
+};
+
+export { apiAuth, socketAuth };
