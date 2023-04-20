@@ -20,7 +20,7 @@ loginRouter.post('/', async (req: Request, res: Response) => {
       res.cookie('token', token, {
         sameSite: 'none', httpOnly: true, secure: true, expires: new Date(Date.now() + 3600000 * 24),
       });
-      return res.sendStatus(200);
+      return res.send({ username: user.username, id: user.id, balance: user.balance });
     });
   } catch (error) {
     return res.sendStatus(400);

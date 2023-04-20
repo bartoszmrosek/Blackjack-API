@@ -26,7 +26,15 @@ Request body:
 	    "username": string,
 	    "password": string
     }
-   Returns http code and sets jwt token in secure cookie.
+   On successful request sets token in cookie and returns:
+   
+   
+
+    {
+	   "id": number,
+	   "username": string,
+       "balance": number
+    }[]
    #### /rooms/ - GET
    Returns array of rooms in this format:
    
