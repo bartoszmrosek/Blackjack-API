@@ -34,7 +34,7 @@ Request body:
 	   "id": number,
 	   "username": string,
        "balance": number
-    }[]
+    }
    #### /rooms/ - GET
    Returns array of rooms in this format:
    
