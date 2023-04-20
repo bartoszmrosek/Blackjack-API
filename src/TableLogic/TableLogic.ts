@@ -6,6 +6,8 @@ import getRandomInt from '../utils/getRandomInt.js';
 import deck from '../cardDeck.json' assert {type: 'json'};
 import checkCardRules from '../utils/checkGameRules.js';
 import { removeEmptyTable } from '../app.js';
+import mysqlDataSrc from '../database/mysql.config.js';
+import User from '../entity/user.entity.js';
 
 export default class TableLogic {
   protected sockets: TypedSocketWithUser[] = [];
@@ -94,8 +96,17 @@ export default class TableLogic {
       };
     });
     this.isGameFinished = true;
-    this.sockets.forEach((user) => {
-      user.emit('gameEnded', this.getGameStatusObject());
+    this.sockets.forEach((socket) => {
+      socket.emit('gameEnded', this.getGameStatusObject());
+      if (
+        this.activePlayers.some((activePlayer) => activePlayer.socket.user.id === socket.user.id)
+      ) {
+        socket.emit('balanceUpdate', socket.user.balance);
+      }
+    });
+    const sqlRepo = mysqlDataSrc.getRepository(User);
+    this.activePlayers.forEach((activePlayer) => {
+      sqlRepo.update(activePlayer.socket.user.id, { balance: activePlayer.socket.user.balance });
     });
     setTimeout(() => {
       this.resetGame();
@@ -292,6 +303,7 @@ export default class TableLogic {
       didGetBlackjack: false,
     };
     this.activePlayers = [];
+    this.timeoutTime = 0;
     this.sockets.forEach((user) => {
       user.emit('gameStatusUpdate', this.getGameStatusObject());
     });
