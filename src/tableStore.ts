@@ -1,4 +1,4 @@
-import Table from './tableLogic/Table.js';
+import Table from './tableLogic/table.js';
 
 const allGameTables: Table[] = [];
 export function removeEmptyTable(tableId: string) {

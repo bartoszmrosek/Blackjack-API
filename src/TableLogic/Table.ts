@@ -1,6 +1,6 @@
 import { TypedSocketWithUser } from 'interfaces/Socket.interface';
 import { removeEmptyTable } from '../tableStore.js';
-import TableLogic from './TableLogic.js';
+import TableLogic from './tableLogic.js';
 
 export default class Table extends TableLogic {
   public getTableId() {
