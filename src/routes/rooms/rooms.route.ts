@@ -18,7 +18,7 @@ roomsRouter.post('/create', apiAuth, (req: Request, res: Response) => {
   const GameTable = new Table(gameTableId);
   GameTable.initialize();
   allGameTables.push(GameTable);
-  res.send(GameTable.getTableId());
+  res.send({ id: GameTable.getTableId() });
 });
 
 export default roomsRouter;

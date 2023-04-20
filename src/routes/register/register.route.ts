@@ -11,8 +11,8 @@ registerRouter.post('/', async (req: Request, res: Response) => {
   try {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = mysqlDataSrc.getRepository(User).create({ username, password: passwordHash });
-    const results = await mysqlDataSrc.getRepository(User).save(user);
-    return res.send(results);
+    await mysqlDataSrc.getRepository(User).save(user);
+    return res.sendStatus(200);
   } catch (error) {
     return res.sendStatus(500);
   }
