@@ -6,11 +6,12 @@ import { ActivePlayer, Player, PlayerDecision } from './Player.interface';
 type WithTimeoutAck<isSender extends boolean, args extends any[]> =
 isSender extends true ? [Error, ...args] : args;
 
-type SocketSafeActivePlayer = Omit<ActivePlayer, 'user' | 'reservedBalance'>;
-type SocketSafePendingPlayer = Omit<Player, 'user' | 'reservedBalance'>;
+type SocketSafeActivePlayer = Omit<ActivePlayer, 'socket' | 'reservedBalance'>;
+type SocketSafePendingPlayer = Omit<Player, 'socket' | 'reservedBalance'>;
 
 type GameStatusObject = {
     isGameStarted: boolean,
+    isGameEnded: boolean,
     timer: number,
     activePlayers: SocketSafeActivePlayer[],
     pendingPlayers: SocketSafePendingPlayer[],
@@ -29,6 +30,7 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
     gameStatusUpdate: (
         {
           isGameStarted,
+          isGameEnded,
           timer,
           activePlayers,
           pendingPlayers,
@@ -44,6 +46,7 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
     presenterTime: (
         {
           isGameStarted,
+          isGameEnded,
           timer,
           activePlayers,
           pendingPlayers,
@@ -55,13 +58,15 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
     gameEnded: (
         {
           isGameStarted,
+          isGameEnded,
           timer,
           activePlayers,
           pendingPlayers,
           presenterState,
           currentlyAsking,
         }: GameStatusObject
-    )=>void
+    )=>void,
+    balanceUpdate: (newBalance: number)=>void
 }
 
 export interface ClientToServerEvents{

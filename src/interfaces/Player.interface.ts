@@ -4,7 +4,7 @@ export type PlayerStatus = 'playing' | 'bust' | 'won' | 'lost' | 'blackjack' | '
 export type PlayerDecision = 'hit' | 'stand' | 'doubleDown'
 
 export interface Player {
-  user: TypedSocketWithUser,
+  socket: TypedSocketWithUser,
   seatId: number,
   bet: number,
 }

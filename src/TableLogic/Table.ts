@@ -3,20 +3,16 @@ import { removeEmptyTable } from '../app.js';
 import TableLogic from './TableLogic.js';
 
 export default class Table extends TableLogic {
-  constructor(private id: string) {
-    super();
-  }
-
   public getTableId() {
-    return this.id;
+    return this.tableId;
   }
 
   public getNumOfPlayers() {
-    return this.users.length;
+    return this.sockets.length;
   }
 
   private handleJoinTableSeat(
-    user: TypedSocketWithUser,
+    socket: TypedSocketWithUser,
     seatId: number,
     callback: (ack: number)=>void,
   ) {
@@ -28,16 +24,16 @@ export default class Table extends TableLogic {
       return callback(406);
     }
     this.pendingPlayers.push({
-      user, seatId, bet: 0,
+      socket, seatId, bet: 0,
     });
     if (this.pendingPlayers.length === 1 && !this.isGameStarting && !this.isGameStarted) {
       this.timerStarting();
     }
-    this.users.forEach((currentUser) => {
-      if (currentUser.id !== user.id) {
+    this.sockets.forEach((currentUser) => {
+      if (currentUser.id !== socket.id) {
         currentUser.emit('userJoinedSeat', {
-          username: user.user.username,
-          userId: user.user.id,
+          username: socket.user.username,
+          userId: socket.user.id,
           seatId,
         });
       }
@@ -46,19 +42,20 @@ export default class Table extends TableLogic {
   }
 
   private handleLeaveTableSeat(
-    user: TypedSocketWithUser,
+    socket: TypedSocketWithUser,
     seatId: number,
   ) {
     this.pendingPlayers = this.pendingPlayers.filter(
-      (pendingPlayer) => pendingPlayer.user.id !== user.id && pendingPlayer.seatId !== seatId,
+      (pendingPlayer) => pendingPlayer.socket.user.id !== socket.user.id
+       && pendingPlayer.seatId !== seatId,
     );
-    this.users.forEach((anotherUser) => {
-      anotherUser.emit('userLeftSeat', { userId: user.user.id, seatId });
+    this.sockets.forEach((anotherUser) => {
+      anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId });
     });
   }
 
   private handlePlacingBet(
-    user: TypedSocketWithUser,
+    socket: TypedSocketWithUser,
     bet: number,
     seatId:number,
     callback: (ack: number)=> void,
@@ -66,14 +63,14 @@ export default class Table extends TableLogic {
     let isBetPlaced = false;
     this.pendingPlayers = this.pendingPlayers.map((pendingPlayer) => {
       if (
-        pendingPlayer.user.user.id === user.user.id
+        pendingPlayer.socket.user.id === socket.user.id
          && seatId === pendingPlayer.seatId
-         && pendingPlayer.user.user.balance - bet >= 0
+         && pendingPlayer.socket.user.balance - bet >= 0
       ) {
         // eslint-disable-next-line no-param-reassign
-        user.user.balance -= bet;
-        this.users.forEach((remainingUser) => {
-          if (remainingUser.user.id !== user.user.id) {
+        socket.user.balance -= bet;
+        this.sockets.forEach((remainingUser) => {
+          if (remainingUser.user.id !== socket.user.id) {
             remainingUser.emit('betPlaced', bet, seatId);
           }
         });
@@ -89,25 +86,27 @@ export default class Table extends TableLogic {
     }
   }
 
-  private handleDisconnect(user: TypedSocketWithUser) {
-    const remainingUsers = this.users.filter((connectedUser) => connectedUser.id !== user.id);
+  private handleDisconnect(socket: TypedSocketWithUser) {
+    const remainingUsers = this.sockets.filter((connectedUser) => connectedUser.id !== socket.id);
     remainingUsers.forEach((remainingUser) => {
-      remainingUser.emit('userLeftGame', user.user.id);
+      remainingUser.emit('userLeftGame', socket.user.id);
     });
-    this.users = remainingUsers;
+    this.sockets = remainingUsers;
     this.pendingPlayers = this.pendingPlayers.filter(
-      (pendingPlayer) => pendingPlayer.user.id !== user.id,
+      (pendingPlayer) => pendingPlayer.socket.id !== socket.id,
     );
-    if (this.users.length === 0 && !this.isGameStarted) {
-      removeEmptyTable(this.id);
-    } else if (this.users.length === 0) {
-      this.resetGame();
+    if (this.sockets.length === 0 && !this.isGameStarted) {
+      setInterval(() => {
+        if (this.sockets.length === 0) {
+          removeEmptyTable(this.tableId);
+        }
+      }, 5000);
     }
   }
 
   // Registers all listeners and events on socket
   public userJoinRoom(user: TypedSocketWithUser) {
-    this.users.push(user);
+    this.sockets.push(user);
     user.emit('gameStatusUpdate', this.getGameStatusObject());
     user.on('joinTableSeat', (seatId, callback) => this.handleJoinTableSeat(user, seatId, callback));
     user.on('leaveTableSeat', (seatId) => this.handleLeaveTableSeat(user, seatId));
