@@ -11,7 +11,7 @@
     "dev": "set NODE_ENV=development&&nodemon --watch src ./src/server.ts"
   },
   "keywords": [],
-  "author": "",
+  "author": "Bartosz Mrosek",
   "license": "ISC",
   "dependencies": {
     "@types/cookie": "^0.5.1",
