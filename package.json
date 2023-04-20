@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "prebuild": "yarn install",
     "build": "tsc",
     "start": "set NODE_ENV=production&&node dist/server.js",
     "dev": "set NODE_ENV=development&&nodemon --watch src ./src/server.ts"
