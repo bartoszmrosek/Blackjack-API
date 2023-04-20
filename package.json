@@ -7,8 +7,8 @@
   "scripts": {
     "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "nodemon --watch src ./src/server.ts"
+    "start": "set NODE_ENV=production&&node dist/server.js",
+    "dev": "set NODE_ENV=development&&nodemon --watch src ./src/server.ts"
   },
   "keywords": [],
   "author": "",

@@ -16,12 +16,12 @@ await mysqlDataSrc.initialize().then(() => {
 }).catch((error) => {
   console.error(error);
 });
-
+const environment = process.env.NODE_ENV;
+const origin = environment === 'production' ? 'https://bartoszmrosek.github.io/Blackjack-Game' : 'https://localhost:5173/Blackjack-Game';
 const CORS_OPTIONS: cors.CorsOptions = {
   credentials: true,
-  origin: process.env.NODE_ENV === 'production' ? 'https://bartoszmrosek.github.io/Blackjack-Game' : 'https://localhost:5173/Blackjack-Game',
+  origin,
 };
-
 const app = express();
 app.use(helmet());
 app.use(json());
