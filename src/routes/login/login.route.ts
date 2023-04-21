@@ -23,6 +23,7 @@ loginRouter.post('/', async (req: Request, res: Response) => {
       return res.send({ username: user.username, id: user.id, balance: user.balance });
     });
   } catch (error) {
+    console.log(error);
     return res.sendStatus(400);
   }
 });

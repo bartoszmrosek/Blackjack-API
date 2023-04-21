@@ -14,6 +14,7 @@ registerRouter.post('/', async (req: Request, res: Response) => {
     await mysqlDataSrc.getRepository(User).save(user);
     return res.sendStatus(200);
   } catch (error) {
+    console.log(error);
     return res.sendStatus(500);
   }
 });
