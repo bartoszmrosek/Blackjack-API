@@ -22,9 +22,13 @@ type GameStatusObject = {
 export interface ServerToClienEvents<isSender extends boolean = false>{
     gameTimerStarting: (timerTime: number)=>void;
     userJoinedSeat: ({ username, userId, seatId }:
-        {username: string, userId: number, seatId: number}
+        {username: string, userId: number, seatId: number, timer: number}
     )=>void;
-    userLeftSeat: ({ userId, seatId }: {userId: number, seatId: number})=>void;
+    userLeftSeat: ({
+      userId,
+      seatId,
+      username,
+    }: {userId: number, seatId: number; username: string})=>void;
     userLeftGame: (userId: number)=>void;
     betPlaced: (bet: number, seatId: number)=>void;
     gameStatusUpdate: (
@@ -37,6 +41,14 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
           currentlyAsking,
         }: GameStatusObject
     )=>void,
+    gameStarts: ({
+      gameState,
+      timer,
+      activePlayers,
+      pendingPlayers,
+      presenterState,
+      currentlyAsking,
+    }: GameStatusObject)=>void,
     askingStatusUpdate: (currentlyAsking: GameStatusObject['currentlyAsking'])=>void;
     userMadeDecision: (currentlyAsking: GameStatusObject['currentlyAsking'], decision: PlayerDecision, card?: string)=>void
     getPlayerDecision: (seatId: number,

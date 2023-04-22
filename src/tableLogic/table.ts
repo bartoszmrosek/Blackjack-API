@@ -44,13 +44,12 @@ export default class Table extends TableLogic {
       this.timerStarting();
     }
     this.sockets.forEach((currentUser) => {
-      if (currentUser.id !== socket.id) {
-        currentUser.emit('userJoinedSeat', {
-          username: socket.user.username,
-          userId: socket.user.id,
-          seatId,
-        });
-      }
+      currentUser.emit('userJoinedSeat', {
+        username: socket.user.username,
+        userId: socket.user.id,
+        seatId,
+        timer: this.timeoutTime,
+      });
     });
     return callback(200);
   }
@@ -64,7 +63,7 @@ export default class Table extends TableLogic {
        && pendingPlayer.seatId !== seatId,
     );
     this.sockets.forEach((anotherUser) => {
-      anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId });
+      anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId, username: socket.user.username });
     });
   }
 
@@ -82,12 +81,11 @@ export default class Table extends TableLogic {
          && seatId === pendingPlayer.seatId
          && pendingPlayer.socket.user.balance - bet >= 0
       ) {
+        const previousBet = pendingPlayer.bet;
         // eslint-disable-next-line no-param-reassign
-        socket.user.balance -= bet;
-        this.sockets.forEach((remainingUser) => {
-          if (remainingUser.user.id !== socket.user.id) {
-            remainingUser.emit('betPlaced', bet, seatId);
-          }
+        socket.user.balance -= bet + previousBet;
+        this.sockets.forEach((remainingSocket) => {
+          remainingSocket.emit('betPlaced', bet, seatId);
         });
         isBetPlaced = true;
         return { ...pendingPlayer, bet };

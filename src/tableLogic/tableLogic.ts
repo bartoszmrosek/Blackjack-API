@@ -21,7 +21,7 @@ export default class TableLogic {
 
   protected gameState: GameState = { ...initialGameState };
 
-  private timeoutTime = 0;
+  protected timeoutTime = 0;
 
   private timerIntervalCb: ReturnType<typeof setInterval>;
 
@@ -77,7 +77,7 @@ export default class TableLogic {
     this.sockets.forEach((socket) => {
       socket.emit('gameEnded', this.getGameStatusObject());
       if (
-        this.activePlayers.some((activePlayer) => activePlayer.socket.user.id === socket.user.id)
+        this.sockets.some((notifiedSocket) => notifiedSocket.user.id === socket.user.id)
       ) {
         socket.emit('balanceUpdate', socket.user.balance);
       }
@@ -99,7 +99,7 @@ export default class TableLogic {
       user.emit('presenterTime', this.getGameStatusObject());
     });
     const drawNewCard = (iteration: number) => {
-      if (Math.min(...this.presenterState.score) < 17 || !this.presenterState.didGetBlackjack) {
+      if (Math.min(...this.presenterState.score) < 17 && !this.presenterState.didGetBlackjack) {
         const newPresenterCard = getNewCardFromDeck(this.playingDeck);
         const newPresenterScore = getAllPermutations(
           this.presenterState.score,
@@ -215,7 +215,7 @@ export default class TableLogic {
       };
     });
     this.sockets.forEach((user) => {
-      user.emit('gameStatusUpdate', this.getGameStatusObject());
+      user.emit('gameStarts', this.getGameStatusObject());
     });
     this.activePlayers.sort((firstPlayer, secondPlayer) => {
       if (firstPlayer.seatId > secondPlayer.seatId) {
