@@ -19,6 +19,10 @@ export default class Table extends TableLogic {
     }, 5000);
   }
 
+  public getSocketIds() {
+    return this.sockets.map((socket) => socket.id);
+  }
+
   private handleJoinTableSeat(
     socket: TypedSocketWithUser,
     seatId: number,
@@ -32,7 +36,7 @@ export default class Table extends TableLogic {
       return callback(406);
     }
     this.pendingPlayers.push({
-      socket, seatId, bet: 0,
+      socket, seatId, bet: 0, username: socket.user.username, userId: socket.user.id,
     });
     if (this.pendingPlayers.length === 1
       && !this.gameState.isGameStarting

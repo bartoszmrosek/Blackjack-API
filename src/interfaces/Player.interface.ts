@@ -6,7 +6,9 @@ export type PlayerDecision = 'hit' | 'stand' | 'doubleDown'
 export interface Player {
   socket: TypedSocketWithUser,
   seatId: number,
+  userId: number,
   bet: number,
+  username: string,
 }
 
 export interface ActivePlayer extends Player{

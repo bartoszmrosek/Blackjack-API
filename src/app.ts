@@ -48,6 +48,9 @@ io.on('connection', (socket: TypedSocketWithUser) => {
     if (foundGameTable.getNumOfPlayers() > 4) {
       return callback(409);
     }
+    if (foundGameTable.getSocketIds().some((socketId) => socketId === socket.id)) {
+      return callback(429);
+    }
     foundGameTable.userJoinRoom(socket);
     return callback(200);
   });
