@@ -8,6 +8,7 @@ export interface Player {
   seatId: number,
   userId: number,
   bet: number,
+  previousBet: number,
   username: string,
 }
 

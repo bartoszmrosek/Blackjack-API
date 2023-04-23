@@ -36,7 +36,12 @@ export default class Table extends TableLogic {
       return callback(406);
     }
     this.pendingPlayers.push({
-      socket, seatId, bet: 0, username: socket.user.username, userId: socket.user.id,
+      socket,
+      seatId,
+      bet: 0,
+      username: socket.user.username,
+      userId: socket.user.id,
+      previousBet: 0,
     });
     if (this.pendingPlayers.length === 1
       && !this.gameState.isGameStarting
@@ -71,7 +76,7 @@ export default class Table extends TableLogic {
     socket: TypedSocketWithUser,
     bet: number,
     seatId:number,
-    callback: (ack: number)=> void,
+    callback: (ack: number, newBalance?: number)=> void,
   ) {
     if (bet <= 0) return callback(400);
     let isBetPlaced = false;
@@ -93,7 +98,7 @@ export default class Table extends TableLogic {
       return pendingPlayer;
     });
     if (isBetPlaced) {
-      return callback(200);
+      return callback(200, socket.user.balance);
     }
     return callback(406);
   }

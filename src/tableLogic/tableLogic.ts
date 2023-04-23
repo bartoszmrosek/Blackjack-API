@@ -271,6 +271,21 @@ export default class TableLogic {
       score: [0],
       didGetBlackjack: false,
     };
+    this.activePlayers.forEach((activePlayer) => {
+      if (activePlayer.socket.connected) {
+        this.pendingPlayers.push({
+          userId: activePlayer.userId,
+          username: activePlayer.username,
+          bet: 0,
+          socket: activePlayer.socket,
+          seatId: activePlayer.seatId,
+          previousBet: activePlayer.bet,
+        });
+      }
+    });
+    if (this.pendingPlayers.length > 0) {
+      this.timerStarting();
+    }
     this.activePlayers = [];
     this.timeoutTime = 0;
     this.sockets.forEach((user) => {
