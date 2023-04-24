@@ -93,7 +93,7 @@ export default class Table extends TableLogic {
         // eslint-disable-next-line no-param-reassign
         socket.user.balance -= bet + previousBet;
         this.sockets.forEach((remainingSocket) => {
-          remainingSocket.emit('betPlaced', bet, seatId);
+          remainingSocket.emit('betPlaced', bet, seatId, this.timeoutTime);
         });
         isBetPlaced = true;
         return { ...pendingPlayer, bet };
@@ -117,7 +117,7 @@ export default class Table extends TableLogic {
     );
     if (this.sockets.length === 0 && !this.gameState.isGameStarted) {
       setInterval(() => {
-        if (this.sockets.length === 0) {
+        if (this.sockets.length === 0 && !this.gameState.isGameStarted) {
           removeEmptyTable(this.tableId);
         }
       }, 10000);

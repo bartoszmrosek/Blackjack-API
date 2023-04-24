@@ -30,7 +30,7 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
       username,
     }: {userId: number, seatId: number; username: string})=>void;
     userLeftGame: (userId: number)=>void;
-    betPlaced: (bet: number, seatId: number)=>void;
+    betPlaced: (bet: number, seatId: number, timer: number)=>void;
     gameStatusUpdate: (
         {
           gameState,

@@ -31,7 +31,7 @@ export default class TableLogic {
 
   private currentlyAsked: ({userId: number, seatId: number} | null) = null;
 
-  private playingDeck = deck.deck;
+  private playingDeck = [...deck.deck];
 
   protected tableId: string;
 
@@ -236,7 +236,8 @@ export default class TableLogic {
 
   protected timerStarting() {
     this.gameState.isGameStarting = true;
-    this.timeoutTime = 10 * 1000;
+    this.timeoutTime = 30 * 1000;
+    console.log(this.timeoutTime);
     this.pendingPlayers.forEach((player) => {
       player.socket.emit('gameTimerStarting', this.timeoutTime);
     });
@@ -271,6 +272,7 @@ export default class TableLogic {
       score: [0],
       didGetBlackjack: false,
     };
+    this.playingDeck = [...deck.deck];
     this.activePlayers.forEach((activePlayer) => {
       if (activePlayer.socket.connected) {
         this.pendingPlayers.push({
@@ -283,11 +285,11 @@ export default class TableLogic {
         });
       }
     });
+    this.timeoutTime = 0;
     if (this.pendingPlayers.length > 0) {
       this.timerStarting();
     }
     this.activePlayers = [];
-    this.timeoutTime = 0;
     this.sockets.forEach((user) => {
       user.emit('gameStatusUpdate', this.getGameStatusObject());
     });
