@@ -79,7 +79,9 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
 }
 
 export interface ClientToServerEvents{
-    joinGameTable: (roomId: string, callback: (code: number)=>void)=>void;
+    joinGameTable: (roomId: string, callback:
+      (code: number, user?: {username: string, userId: number, balance: number})
+      =>void)=>void;
     joinTableSeat: (seatId: number, callback: (ack: number, newBalance?: number)=>void)=>void;
     leaveTableSeat: (seatId: number)=>void;
     placeBet: (bet: number, seatId: number, callback: (ack: number)=>void)=>void;

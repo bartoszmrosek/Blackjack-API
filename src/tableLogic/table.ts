@@ -63,13 +63,16 @@ export default class Table extends TableLogic {
     socket: TypedSocketWithUser,
     seatId: number,
   ) {
-    this.pendingPlayers = this.pendingPlayers.filter(
-      (pendingPlayer) => pendingPlayer.socket.user.id !== socket.user.id
+    const filteredPendingPlayer = this.pendingPlayers.filter(
+      (pendingPlayer) => pendingPlayer.socket.user.id === socket.user.id
        && pendingPlayer.seatId !== seatId,
     );
-    this.sockets.forEach((anotherUser) => {
-      anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId, username: socket.user.username });
-    });
+    if (filteredPendingPlayer.length !== this.pendingPlayers.length) {
+      this.sockets.forEach((anotherUser) => {
+        anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId, username: socket.user.username });
+      });
+    }
+    this.pendingPlayers = filteredPendingPlayer;
   }
 
   private handlePlacingBet(

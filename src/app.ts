@@ -52,7 +52,11 @@ io.on('connection', (socket: TypedSocketWithUser) => {
       return callback(429);
     }
     foundGameTable.userJoinRoom(socket);
-    return callback(200);
+    return callback(200, {
+      userId: socket.user.id,
+      username: socket.user.username,
+      balance: socket.user.balance,
+    });
   });
 });
 
