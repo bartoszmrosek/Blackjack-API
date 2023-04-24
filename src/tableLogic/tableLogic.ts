@@ -21,7 +21,7 @@ export default class TableLogic {
 
   protected gameState: GameState = { ...initialGameState };
 
-  private timeoutTime = 0;
+  protected timeoutTime = 0;
 
   private timerIntervalCb: ReturnType<typeof setInterval>;
 
@@ -31,7 +31,7 @@ export default class TableLogic {
 
   private currentlyAsked: ({userId: number, seatId: number} | null) = null;
 
-  private playingDeck = deck.deck;
+  private playingDeck = [...deck.deck];
 
   protected tableId: string;
 
@@ -77,7 +77,7 @@ export default class TableLogic {
     this.sockets.forEach((socket) => {
       socket.emit('gameEnded', this.getGameStatusObject());
       if (
-        this.activePlayers.some((activePlayer) => activePlayer.socket.user.id === socket.user.id)
+        this.sockets.some((notifiedSocket) => notifiedSocket.user.id === socket.user.id)
       ) {
         socket.emit('balanceUpdate', socket.user.balance);
       }
@@ -99,7 +99,7 @@ export default class TableLogic {
       user.emit('presenterTime', this.getGameStatusObject());
     });
     const drawNewCard = (iteration: number) => {
-      if (Math.min(...this.presenterState.score) < 17 || !this.presenterState.didGetBlackjack) {
+      if (Math.min(...this.presenterState.score) < 17 && !this.presenterState.didGetBlackjack) {
         const newPresenterCard = getNewCardFromDeck(this.playingDeck);
         const newPresenterScore = getAllPermutations(
           this.presenterState.score,
@@ -215,7 +215,7 @@ export default class TableLogic {
       };
     });
     this.sockets.forEach((user) => {
-      user.emit('gameStatusUpdate', this.getGameStatusObject());
+      user.emit('gameStarts', this.getGameStatusObject());
     });
     this.activePlayers.sort((firstPlayer, secondPlayer) => {
       if (firstPlayer.seatId > secondPlayer.seatId) {
@@ -236,7 +236,8 @@ export default class TableLogic {
 
   protected timerStarting() {
     this.gameState.isGameStarting = true;
-    this.timeoutTime = 10 * 1000;
+    this.timeoutTime = 30 * 1000;
+    console.log(this.timeoutTime);
     this.pendingPlayers.forEach((player) => {
       player.socket.emit('gameTimerStarting', this.timeoutTime);
     });
@@ -271,8 +272,24 @@ export default class TableLogic {
       score: [0],
       didGetBlackjack: false,
     };
-    this.activePlayers = [];
+    this.playingDeck = [...deck.deck];
+    this.activePlayers.forEach((activePlayer) => {
+      if (activePlayer.socket.connected) {
+        this.pendingPlayers.push({
+          userId: activePlayer.userId,
+          username: activePlayer.username,
+          bet: 0,
+          socket: activePlayer.socket,
+          seatId: activePlayer.seatId,
+          previousBet: activePlayer.bet,
+        });
+      }
+    });
     this.timeoutTime = 0;
+    if (this.pendingPlayers.length > 0) {
+      this.timerStarting();
+    }
+    this.activePlayers = [];
     this.sockets.forEach((user) => {
       user.emit('gameStatusUpdate', this.getGameStatusObject());
     });

@@ -3,18 +3,18 @@ import { ActivePlayer, Player } from '../../interfaces/Player.interface';
 function getSafePlayersArrays(activePlayers: ActivePlayer[], pendingPlayers: Player[]) {
   const withoutSocketActivePlayers = activePlayers.map((activePlayer) => {
     const {
-      seatId, bet, status, cards, cardsScore, decision, hasMadeFinalDecision, username, userId,
+      socket, ...rest
     } = activePlayer;
     return {
-      seatId, bet, status, cards, cardsScore, decision, hasMadeFinalDecision, username, userId,
+      ...rest,
     };
   });
   const withoutSocketPendingPlayers = pendingPlayers.map((pendingPlayer) => {
     const {
-      seatId, bet, username, userId,
+      seatId, bet, username, userId, previousBet,
     } = pendingPlayer;
     return {
-      seatId, bet, username, userId,
+      seatId, bet, username, userId, previousBet,
     };
   });
 

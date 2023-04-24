@@ -22,11 +22,15 @@ type GameStatusObject = {
 export interface ServerToClienEvents<isSender extends boolean = false>{
     gameTimerStarting: (timerTime: number)=>void;
     userJoinedSeat: ({ username, userId, seatId }:
-        {username: string, userId: number, seatId: number}
+        {username: string, userId: number, seatId: number, timer: number}
     )=>void;
-    userLeftSeat: ({ userId, seatId }: {userId: number, seatId: number})=>void;
+    userLeftSeat: ({
+      userId,
+      seatId,
+      username,
+    }: {userId: number, seatId: number; username: string})=>void;
     userLeftGame: (userId: number)=>void;
-    betPlaced: (bet: number, seatId: number)=>void;
+    betPlaced: (bet: number, seatId: number, timer: number)=>void;
     gameStatusUpdate: (
         {
           gameState,
@@ -37,6 +41,14 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
           currentlyAsking,
         }: GameStatusObject
     )=>void,
+    gameStarts: ({
+      gameState,
+      timer,
+      activePlayers,
+      pendingPlayers,
+      presenterState,
+      currentlyAsking,
+    }: GameStatusObject)=>void,
     askingStatusUpdate: (currentlyAsking: GameStatusObject['currentlyAsking'])=>void;
     userMadeDecision: (currentlyAsking: GameStatusObject['currentlyAsking'], decision: PlayerDecision, card?: string)=>void
     getPlayerDecision: (seatId: number,
@@ -67,8 +79,10 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
 }
 
 export interface ClientToServerEvents{
-    joinGameTable: (roomId: string, callback: (code: number)=>void)=>void;
-    joinTableSeat: (seatId: number, callback: (ack: number)=>void)=>void;
+    joinGameTable: (roomId: string, callback:
+      (code: number, user?: {username: string, userId: number, balance: number})
+      =>void)=>void;
+    joinTableSeat: (seatId: number, callback: (ack: number, newBalance?: number)=>void)=>void;
     leaveTableSeat: (seatId: number)=>void;
     placeBet: (bet: number, seatId: number, callback: (ack: number)=>void)=>void;
 }

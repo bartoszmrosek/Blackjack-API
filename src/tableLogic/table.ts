@@ -36,7 +36,12 @@ export default class Table extends TableLogic {
       return callback(406);
     }
     this.pendingPlayers.push({
-      socket, seatId, bet: 0, username: socket.user.username, userId: socket.user.id,
+      socket,
+      seatId,
+      bet: 0,
+      username: socket.user.username,
+      userId: socket.user.id,
+      previousBet: 0,
     });
     if (this.pendingPlayers.length === 1
       && !this.gameState.isGameStarting
@@ -44,13 +49,12 @@ export default class Table extends TableLogic {
       this.timerStarting();
     }
     this.sockets.forEach((currentUser) => {
-      if (currentUser.id !== socket.id) {
-        currentUser.emit('userJoinedSeat', {
-          username: socket.user.username,
-          userId: socket.user.id,
-          seatId,
-        });
-      }
+      currentUser.emit('userJoinedSeat', {
+        username: socket.user.username,
+        userId: socket.user.id,
+        seatId,
+        timer: this.timeoutTime,
+      });
     });
     return callback(200);
   }
@@ -59,20 +63,23 @@ export default class Table extends TableLogic {
     socket: TypedSocketWithUser,
     seatId: number,
   ) {
-    this.pendingPlayers = this.pendingPlayers.filter(
-      (pendingPlayer) => pendingPlayer.socket.user.id !== socket.user.id
+    const filteredPendingPlayer = this.pendingPlayers.filter(
+      (pendingPlayer) => pendingPlayer.socket.user.id === socket.user.id
        && pendingPlayer.seatId !== seatId,
     );
-    this.sockets.forEach((anotherUser) => {
-      anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId });
-    });
+    if (filteredPendingPlayer.length !== this.pendingPlayers.length) {
+      this.sockets.forEach((anotherUser) => {
+        anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId, username: socket.user.username });
+      });
+    }
+    this.pendingPlayers = filteredPendingPlayer;
   }
 
   private handlePlacingBet(
     socket: TypedSocketWithUser,
     bet: number,
     seatId:number,
-    callback: (ack: number)=> void,
+    callback: (ack: number, newBalance?: number)=> void,
   ) {
     if (bet <= 0) return callback(400);
     let isBetPlaced = false;
@@ -82,12 +89,11 @@ export default class Table extends TableLogic {
          && seatId === pendingPlayer.seatId
          && pendingPlayer.socket.user.balance - bet >= 0
       ) {
+        const previousBet = pendingPlayer.bet;
         // eslint-disable-next-line no-param-reassign
-        socket.user.balance -= bet;
-        this.sockets.forEach((remainingUser) => {
-          if (remainingUser.user.id !== socket.user.id) {
-            remainingUser.emit('betPlaced', bet, seatId);
-          }
+        socket.user.balance -= bet + previousBet;
+        this.sockets.forEach((remainingSocket) => {
+          remainingSocket.emit('betPlaced', bet, seatId, this.timeoutTime);
         });
         isBetPlaced = true;
         return { ...pendingPlayer, bet };
@@ -95,7 +101,7 @@ export default class Table extends TableLogic {
       return pendingPlayer;
     });
     if (isBetPlaced) {
-      return callback(200);
+      return callback(200, socket.user.balance);
     }
     return callback(406);
   }
@@ -111,7 +117,7 @@ export default class Table extends TableLogic {
     );
     if (this.sockets.length === 0 && !this.gameState.isGameStarted) {
       setInterval(() => {
-        if (this.sockets.length === 0) {
+        if (this.sockets.length === 0 && !this.gameState.isGameStarted) {
           removeEmptyTable(this.tableId);
         }
       }, 10000);
