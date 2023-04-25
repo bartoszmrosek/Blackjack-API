@@ -9,7 +9,7 @@ import cors from 'cors';
 import { socketAuth } from './middlewares/auth.middleware.js';
 import router from './routes/index.js';
 import mysqlDataSrc from './database/mysql.config.js';
-import allGameTables from './tableStore.js';
+import allGameTables, { usersMap } from './globalStore.js';
 
 await mysqlDataSrc.initialize().then(() => {
   console.log('database connection estabilished');
@@ -52,10 +52,11 @@ io.on('connection', (socket: TypedSocketWithUser) => {
       return callback(429);
     }
     foundGameTable.userJoinRoom(socket);
+    const user = usersMap.get(socket.userRef);
     return callback(200, {
-      userId: socket.user.id,
-      username: socket.user.username,
-      balance: socket.user.balance,
+      userId: user.id,
+      username: user.username,
+      balance: user.balance,
     });
   });
 });

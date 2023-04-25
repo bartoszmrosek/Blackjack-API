@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import allGameTables from '../../tableStore.js';
+import allGameTables from '../../globalStore.js';
 import { apiAuth } from '../../middlewares/auth.middleware.js';
 import Table from '../../tableLogic/table.js';
 

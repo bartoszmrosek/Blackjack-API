@@ -82,8 +82,8 @@ Event: "gameStarts" | "presenterTime" | "gameEnded" | "gameStatusUpdate", params
             isGameFinished: boolean
         },
         timeLeft: number,
-        activePlayers: [ActivePlayer](#player-object-typing)[]
-        pendingPlayer: [PendingPlayer](#player-object-typing)[]
+        activePlayers: ActivePlayer[]
+        pendingPlayer: PendingPlayer[]
         presenterState: {
             cards: string[],
             score: number[]
@@ -110,7 +110,8 @@ Event: "userJoinedSeat", params: (
 Event: "betPlaced", params: (
     bet: number,
     seatId: number,
-    timeLeft: number
+    timeLeft: number,
+    updatedBalance: number
 )
 ```
 #### User leaving seat
@@ -120,7 +121,8 @@ Event: "userLeftSeat", params: (
         userId: number,
         username: string,
         seatId: number
-    }
+    },
+    updatedBalance: number
 )
 ```
 #### User leaving game

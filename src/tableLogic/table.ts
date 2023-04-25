@@ -1,5 +1,5 @@
 import { TypedSocketWithUser } from 'interfaces/Socket.interface';
-import { removeEmptyTable } from '../tableStore.js';
+import { removeEmptyTable, usersMap } from '../globalStore.js';
 import TableLogic from './tableLogic.js';
 
 export default class Table extends TableLogic {
@@ -35,12 +35,13 @@ export default class Table extends TableLogic {
        || this.activePlayers.some((activePlayer) => activePlayer.seatId === seatId)) {
       return callback(406);
     }
+    const savedUser = usersMap.get(socket.userRef);
     this.pendingPlayers.push({
       socket,
       seatId,
       bet: 0,
-      username: socket.user.username,
-      userId: socket.user.id,
+      username: savedUser.username,
+      userId: savedUser.id,
       previousBet: 0,
     });
     if (this.pendingPlayers.length === 1
@@ -50,8 +51,8 @@ export default class Table extends TableLogic {
     }
     this.sockets.forEach((currentUser) => {
       currentUser.emit('userJoinedSeat', {
-        username: socket.user.username,
-        userId: socket.user.id,
+        username: savedUser.username,
+        userId: savedUser.id,
         seatId,
         timer: this.timeoutTime,
       });
@@ -63,13 +64,24 @@ export default class Table extends TableLogic {
     socket: TypedSocketWithUser,
     seatId: number,
   ) {
+    const savedUser = usersMap.get(socket.userRef);
     const filteredPendingPlayer = this.pendingPlayers.filter(
-      (pendingPlayer) => pendingPlayer.socket.user.id === socket.user.id
-       && pendingPlayer.seatId !== seatId,
+      (pendingPlayer) => {
+        const pendingPlayerUser = usersMap.get(pendingPlayer.socket.userRef);
+        if (pendingPlayerUser.id === savedUser.id && pendingPlayer.seatId !== seatId) {
+          return true;
+        }
+        usersMap.set(pendingPlayer.socket.userRef, {
+          ...pendingPlayerUser,
+          balance: pendingPlayerUser.balance + pendingPlayer.bet,
+        });
+        return false;
+      },
     );
     if (filteredPendingPlayer.length !== this.pendingPlayers.length) {
-      this.sockets.forEach((anotherUser) => {
-        anotherUser.emit('userLeftSeat', { userId: socket.user.id, seatId, username: socket.user.username });
+      this.sockets.forEach((playerSocket) => {
+        const user = usersMap.get(playerSocket.userRef);
+        playerSocket.emit('userLeftSeat', { userId: savedUser.id, seatId, username: savedUser.username }, user.balance);
       });
     }
     this.pendingPlayers = filteredPendingPlayer;
@@ -82,18 +94,22 @@ export default class Table extends TableLogic {
     callback: (ack: number, newBalance?: number)=> void,
   ) {
     if (bet <= 0) return callback(400);
+    const betPlacingUser = usersMap.get(socket.userRef);
     let isBetPlaced = false;
     this.pendingPlayers = this.pendingPlayers.map((pendingPlayer) => {
+      const pendingPlayerUser = usersMap.get(pendingPlayer.socket.userRef);
       if (
-        pendingPlayer.socket.user.id === socket.user.id
+        pendingPlayerUser.id === betPlacingUser.id
          && seatId === pendingPlayer.seatId
-         && pendingPlayer.socket.user.balance - bet >= 0
+         && pendingPlayerUser.balance - bet >= 0
       ) {
-        const previousBet = pendingPlayer.bet;
-        // eslint-disable-next-line no-param-reassign
-        socket.user.balance -= bet + previousBet;
+        usersMap.set(
+          pendingPlayer.socket.userRef,
+          { ...pendingPlayerUser, balance: pendingPlayerUser.balance - bet + pendingPlayer.bet },
+        );
         this.sockets.forEach((remainingSocket) => {
-          remainingSocket.emit('betPlaced', bet, seatId, this.timeoutTime);
+          const remainingUser = usersMap.get(remainingSocket.userRef);
+          remainingSocket.emit('betPlaced', bet, seatId, this.timeoutTime, remainingUser.balance);
         });
         isBetPlaced = true;
         return { ...pendingPlayer, bet };
@@ -101,15 +117,26 @@ export default class Table extends TableLogic {
       return pendingPlayer;
     });
     if (isBetPlaced) {
-      return callback(200, socket.user.balance);
+      return callback(200);
     }
     return callback(406);
   }
 
   private handleDisconnect(socket: TypedSocketWithUser) {
-    const remainingUsers = this.sockets.filter((connectedUser) => connectedUser.id !== socket.id);
-    remainingUsers.forEach((remainingUser) => {
-      remainingUser.emit('userLeftGame', socket.user.id);
+    const remainingUsers = this.sockets.filter((connectedUser) => {
+      if (connectedUser.id !== socket.id) {
+        return true;
+      }
+      const userInformations = usersMap.get(connectedUser.userRef);
+      if (userInformations.sourceFor - 1 === 0) {
+        usersMap.delete(connectedUser.userRef);
+      } else {
+        usersMap.set(connectedUser.userRef, {
+          ...userInformations,
+          sourceFor: userInformations.sourceFor - 1,
+        });
+      }
+      return false;
     });
     this.sockets = remainingUsers;
     this.pendingPlayers = this.pendingPlayers.filter(

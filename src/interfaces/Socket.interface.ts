@@ -1,5 +1,4 @@
 import { Socket } from 'socket.io';
-import User from '../entity/user.entity';
 import { ActivePlayer, Player, PlayerDecision } from './Player.interface';
 import { GameState } from './Table.interfaces';
 
@@ -28,9 +27,8 @@ export interface ServerToClienEvents<isSender extends boolean = false>{
       userId,
       seatId,
       username,
-    }: {userId: number, seatId: number; username: string})=>void;
-    userLeftGame: (userId: number)=>void;
-    betPlaced: (bet: number, seatId: number, timer: number)=>void;
+    }: {userId: number, seatId: number; username: string}, updatedBalance: number)=>void;
+    betPlaced: (bet: number, seatId: number, timer: number, updatedBalance: number)=>void;
     gameStatusUpdate: (
         {
           gameState,
@@ -89,5 +87,5 @@ export interface ClientToServerEvents{
 
 export type TypedSocket = Socket<ClientToServerEvents, ServerToClienEvents>;
 export interface TypedSocketWithUser extends TypedSocket {
-    user: User
+    userRef: number
 }

@@ -4,7 +4,7 @@ import getAllPermutations from '../utils/getAllPermutations.js';
 import getCardValues from '../utils/getCardValues.js';
 import deck from '../cardDeck.json' assert {type: 'json'};
 import checkCardRules from '../utils/checkGameRules.js';
-import { removeEmptyTable } from '../tableStore.js';
+import { removeEmptyTable, usersMap } from '../globalStore.js';
 import mysqlDataSrc from '../database/mysql.config.js';
 import User from '../entity/user.entity.js';
 import getSafePlayersArrays from './tableUtils/getSafePlayerArrays.js';
@@ -64,10 +64,21 @@ export default class TableLogic {
         { status, score: cardsScore },
         this.presenterState.didGetBlackjack ? 'blackjack' : Math.min(...this.presenterState.score),
       );
+      const user = usersMap.get(socket.userRef);
       if (userStatus === 'blackjack' || userStatus === 'won') {
-        socket.user.balance += bet * 2;
+        usersMap.set(
+          socket.userRef,
+          {
+            ...user,
+            balance: user.balance + bet * 3,
+          },
+        );
       }
-      if (userStatus === 'push') socket.user.balance += bet;
+      if (userStatus === 'push') {
+        usersMap.set(socket.userRef, {
+          ...user, balance: user.balance + bet,
+        });
+      }
       return {
         ...activePlayer,
         status: userStatus,
@@ -75,16 +86,20 @@ export default class TableLogic {
     });
     this.gameState.isGameFinished = true;
     this.sockets.forEach((socket) => {
+      const socketUser = usersMap.get(socket.userRef);
       socket.emit('gameEnded', this.getGameStatusObject());
       if (
-        this.sockets.some((notifiedSocket) => notifiedSocket.user.id === socket.user.id)
+        this.sockets.some(
+          (notifiedSocket) => socketUser.id === usersMap.get(notifiedSocket.userRef).id,
+        )
       ) {
-        socket.emit('balanceUpdate', socket.user.balance);
+        socket.emit('balanceUpdate', socketUser.balance);
       }
     });
     const sqlRepo = mysqlDataSrc.getRepository(User);
     this.activePlayers.forEach((activePlayer) => {
-      sqlRepo.update(activePlayer.socket.user.id, { balance: activePlayer.socket.user.balance });
+      const activeUser = usersMap.get(activePlayer.socket.userRef);
+      sqlRepo.update(activeUser.id, { balance: activeUser.balance });
     });
     setTimeout(() => {
       this.resetGame();
@@ -127,13 +142,15 @@ export default class TableLogic {
     const {
       socket: playerSocket, seatId, bet, cardsScore,
     } = playerToAskRef;
+    const socketUser = usersMap.get(playerSocket.userRef);
     this.sockets.forEach((socket) => {
-      if (socket.user.id !== playerSocket.user.id) {
+      const user = usersMap.get(socket.userRef);
+      if (user.id !== socketUser.id) {
         socket.emit('askingStatusUpdate', this.currentlyAsked);
       }
     });
     // If player is not connected anymore play as if he just made stand decision
-    if (!this.sockets.some((socket) => socket.user.id === playerSocket.user.id)) {
+    if (!this.sockets.some((socket) => usersMap.get(socket.userRef).id === socketUser.id)) {
       playerToAskRef.decision = 'stand';
       playerToAskRef.hasMadeFinalDecision = true;
       this.sockets.forEach((user) => {
@@ -144,7 +161,7 @@ export default class TableLogic {
     return playerSocket.timeout(10000).emit('getPlayerDecision', seatId, (err, decision) => {
       if (err
             || decision === 'stand'
-            || (decision === 'doubleDown' && playerSocket.user.balance - bet < 0)
+            || (decision === 'doubleDown' && socketUser.balance - bet < 0)
       ) {
         playerToAskRef.decision = 'stand';
         playerToAskRef.hasMadeFinalDecision = true;
@@ -181,7 +198,7 @@ export default class TableLogic {
     }
     if (playerToAsk !== null) {
       this.currentlyAsked = {
-        userId: playerToAsk.socket.user.id,
+        userId: usersMap.get(playerToAsk.socket.userRef).id,
         seatId: playerToAsk.seatId,
       };
       this.askPlayer(playerToAsk);
