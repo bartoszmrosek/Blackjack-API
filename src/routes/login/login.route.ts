@@ -28,4 +28,18 @@ loginRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
+loginRouter.get('/token', async (req: Request, res: Response) => {
+  const { token } = req.cookies;
+  if (!token) return res.sendStatus(400);
+  try {
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY) as {username: string};
+    const userRepo = mysqlDataSrc.getRepository(User);
+    const user = await userRepo.findOneByOrFail({ username: decodedToken.username });
+    return res.status(200).send({ username: user.username, id: user.id, balance: user.balance });
+  } catch (error) {
+    res.cookie('token', '', { maxAge: 0 });
+    return res.sendStatus(401);
+  }
+});
+
 export default loginRouter;

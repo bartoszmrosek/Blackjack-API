@@ -5,6 +5,7 @@ import { parse } from 'cookie';
 import mysqlDataSrc from '../database/mysql.config.js';
 import User from '../entity/user.entity.js';
 import { TypedSocketWithUser } from '../interfaces/Socket.interface';
+import { usersMap } from '../globalStore.js';
 
 const socketAuth = async (
   socket: TypedSocketWithUser,
@@ -23,8 +24,14 @@ const socketAuth = async (
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY) as {username: string};
     const userRepo = mysqlDataSrc.getRepository(User);
     const user = await userRepo.findOneByOrFail({ username: decodedToken.username });
+    if (!usersMap.has(user.id)) {
+      usersMap.set(user.id, { ...user, sourceFor: 1 });
+    } else {
+      const savedUser = usersMap.get(user.id);
+      usersMap.set(user.id, { ...savedUser, sourceFor: savedUser.sourceFor + 1 });
+    }
     // eslint-disable-next-line no-param-reassign
-    socket.user = user;
+    socket.userRef = user.id;
     return next();
   } catch (error) {
     const err = new Error('401');
@@ -39,6 +46,7 @@ const apiAuth = (req: Request, res: Response, next: NextFunction) => {
     jwt.verify(token, process.env.SECRET_KEY);
     return next();
   } catch (error) {
+    res.cookie('token', '', { maxAge: 0 });
     return res.sendStatus(400);
   }
 };

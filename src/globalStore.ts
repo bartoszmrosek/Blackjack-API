@@ -1,3 +1,4 @@
+import User from './entity/user.entity.js';
 import Table from './tableLogic/table.js';
 
 const allGameTables: Table[] = [];
@@ -8,4 +9,7 @@ export function removeEmptyTable(tableId: string) {
   }
 }
 
+const usersMap = new Map<number, {sourceFor: number} & User>();
+
+export { usersMap };
 export default allGameTables;
