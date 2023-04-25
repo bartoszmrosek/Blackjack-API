@@ -237,7 +237,6 @@ export default class TableLogic {
   protected timerStarting() {
     this.gameState.isGameStarting = true;
     this.timeoutTime = 30 * 1000;
-    console.log(this.timeoutTime);
     this.pendingPlayers.forEach((player) => {
       player.socket.emit('gameTimerStarting', this.timeoutTime);
     });

@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import mysqlDataSrc from '../../database/mysql.config.js';
 import User from '../../entity/user.entity.js';
 
@@ -11,8 +12,15 @@ registerRouter.post('/', async (req: Request, res: Response) => {
   try {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = mysqlDataSrc.getRepository(User).create({ username, password: passwordHash });
-    await mysqlDataSrc.getRepository(User).save(user);
-    return res.sendStatus(200);
+    const newUser = await mysqlDataSrc.getRepository(User).save(user);
+    return jwt.sign({ username }, process.env.SECRET_KEY, { expiresIn: '24h' }, (error, token) => {
+      if (error) return res.sendStatus(500);
+      res.cookie('token', token, {
+        sameSite: 'none', httpOnly: true, secure: true, expires: new Date(Date.now() + 3600000 * 24),
+      });
+      return res.status(200)
+        .send({ username: newUser.username, id: newUser.id, balance: newUser.balance });
+    });
   } catch (error) {
     console.log(error);
     return res.sendStatus(500);

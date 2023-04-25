@@ -39,6 +39,7 @@ const apiAuth = (req: Request, res: Response, next: NextFunction) => {
     jwt.verify(token, process.env.SECRET_KEY);
     return next();
   } catch (error) {
+    res.cookie('token', '', { maxAge: 0 });
     return res.sendStatus(400);
   }
 };
