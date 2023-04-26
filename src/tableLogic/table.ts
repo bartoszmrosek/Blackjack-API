@@ -68,7 +68,7 @@ export default class Table extends TableLogic {
     const filteredPendingPlayer = this.pendingPlayers.filter(
       (pendingPlayer) => {
         const pendingPlayerUser = usersMap.get(pendingPlayer.socket.userRef);
-        if (pendingPlayerUser.id === savedUser.id && pendingPlayer.seatId !== seatId) {
+        if (pendingPlayerUser.id !== savedUser.id || pendingPlayer.seatId !== seatId) {
           return true;
         }
         usersMap.set(pendingPlayer.socket.userRef, {
