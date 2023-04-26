@@ -51,8 +51,11 @@ io.on('connection', (socket: TypedSocketWithUser) => {
     if (foundGameTable.getSocketIds().some((socketId) => socketId === socket.id)) {
       return callback(429);
     }
+    console.log('here');
     foundGameTable.userJoinRoom(socket);
     const user = usersMap.get(socket.userRef);
+    const savedUser = usersMap.get(user.id);
+    usersMap.set(user.id, { ...savedUser, sourceFor: savedUser.sourceFor + 1 });
     return callback(200, {
       userId: user.id,
       username: user.username,
