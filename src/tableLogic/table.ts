@@ -138,6 +138,7 @@ export default class Table extends TableLogic {
       }
       return false;
     });
+    console.log(usersMap);
     this.sockets = remainingUsers;
     this.pendingPlayers = this.pendingPlayers.filter(
       (pendingPlayer) => pendingPlayer.socket.id !== socket.id,

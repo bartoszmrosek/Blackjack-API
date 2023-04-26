@@ -25,10 +25,7 @@ const socketAuth = async (
     const userRepo = mysqlDataSrc.getRepository(User);
     const user = await userRepo.findOneByOrFail({ username: decodedToken.username });
     if (!usersMap.has(user.id)) {
-      usersMap.set(user.id, { ...user, sourceFor: 1 });
-    } else {
-      const savedUser = usersMap.get(user.id);
-      usersMap.set(user.id, { ...savedUser, sourceFor: savedUser.sourceFor + 1 });
+      usersMap.set(user.id, { ...user, sourceFor: 0 });
     }
     // eslint-disable-next-line no-param-reassign
     socket.userRef = user.id;
