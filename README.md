@@ -1,4 +1,4 @@
-
+[![Tests](https://github.com/bartoszmrosek/Blackjack-API/actions/workflows/Tests.yml/badge.svg)](https://github.com/bartoszmrosek/Blackjack-API/actions/workflows/Tests.yml)
 # Blackjack API
 
 Backend consiststing of multiple public and private routes.
