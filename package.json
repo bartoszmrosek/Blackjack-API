@@ -9,7 +9,8 @@
     "prebuild": "yarn install",
     "build": "tsc",
     "start": "set NODE_ENV=production&&node dist/server.js",
-    "dev": "set NODE_ENV=development&&nodemon --watch src ./src/server.ts"
+    "dev": "set NODE_ENV=development&&nodemon --watch src ./src/server.ts",
+    "coverage": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll --coverage"
   },
   "keywords": [],
   "author": "Bartosz Mrosek",
