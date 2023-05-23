@@ -8,6 +8,10 @@ on:
 
 env:
   SECRET_KEY: 7Z5LKzDXCJC3beAdFpfBYYyHeMK9tBls
+  HOST: ${{ secrets.HOST }}
+  USER: ${{ secrets.USER }}
+  PASSWORD: ${{ secrets.PASSWORD }}
+  DATABASE: ${{ secrets.DATABASE }}
 
 jobs:
   unit:
