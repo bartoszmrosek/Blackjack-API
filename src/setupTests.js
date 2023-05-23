@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import jwt from 'jsonwebtoken';
+import mysqlDataSrc from './database/mysql.config.js';
 
 jest.mock('socket.io', () => ({
     Server: jest.fn(() => ({
@@ -9,6 +10,10 @@ jest.mock('socket.io', () => ({
         emit: jest.fn(),
     })),
 }));
+
+afterAll(async () => {
+    await mysqlDataSrc.destroy();
+});
 
 const token = jwt.sign({ username: 'test' }, process.env.SECRET_KEY, { expiresIn: '24h' });
 
