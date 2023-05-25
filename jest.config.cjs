@@ -11,4 +11,7 @@ module.exports = {
   moduleNameMapper: {
     '^(\\.\\.?\\/.+)\\.js$': '$1',
   },
+  modulePathIgnorePatterns: ['<rootDir>/dist/'],
+  setupFiles: ['dotenv/config'],
+  setupFilesAfterEnv: ['./src/setupTests.js'],
 };

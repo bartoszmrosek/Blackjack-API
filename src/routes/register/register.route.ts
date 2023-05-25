@@ -11,8 +11,9 @@ registerRouter.post('/', async (req: Request, res: Response) => {
   if (!username || !password) return res.sendStatus(400);
   try {
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = mysqlDataSrc.getRepository(User).create({ username, password: passwordHash });
-    const newUser = await mysqlDataSrc.getRepository(User).save(user);
+    const userRepo = mysqlDataSrc.getRepository(User);
+    const user = userRepo.create({ username, password: passwordHash });
+    const newUser = await userRepo.save(user);
     return jwt.sign({ username }, process.env.SECRET_KEY, { expiresIn: '24h' }, (error, token) => {
       if (error) return res.sendStatus(500);
       res.cookie('token', token, {

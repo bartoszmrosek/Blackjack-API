@@ -1,0 +1,25 @@
+name: Tests
+
+on:
+  push:
+    branches: ['master', 'development']
+  pull_request:
+    branches: ['master']
+
+env:
+  SECRET_KEY: 7Z5LKzDXCJC3beAdFpfBYYyHeMK9tBls
+  HOST: ${{ secrets.HOST }}
+  USER: ${{ secrets.USER }}
+  PASSWORD: ${{ secrets.PASSWORD }}
+  DATABASE: ${{ secrets.DATABASE }}
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: yarn install
+      - name: Run JEST tests
+        run: yarn test:all
